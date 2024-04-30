@@ -170,10 +170,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function calculateAndDisplayMetrics(data) {
         const totalPerformance = calculateTotalPerformance(data);
         const volatility = calculateVolatility(data);
-        const longestTimeUnderwater = calculateLongestTimeUnderwater(data);
+        const longestTimeUnderwater = calculateMaxDrawdown(data);
+        const average = calculateAverageAnnualPerformance(data);
 
         document.getElementById('allperformance').textContent = `${totalPerformance.toFixed(2)}%`;
         document.getElementById('vola').textContent = `${volatility.toFixed(2)}%`;
+        document.getElementById('average').textContent = `${(average * 100).toFixed(2)}%`;
         document.getElementById('water').textContent = `${longestTimeUnderwater} Tage`;
     }
 
@@ -191,20 +193,34 @@ document.addEventListener('DOMContentLoaded', function() {
         return Math.max(minDiff, maxDiff);
     }
 
-    function calculateLongestTimeUnderwater(data) {
-        let longestStreak = 0;
-        let currentStreak = 0;
+    function calculateMaxDrawdown(data) {
+        let maxVal = data[0];
+        let maxDrawdown = 0;
 
         data.forEach(value => {
-            if (value < 100) {
-                currentStreak++;
-                longestStreak = Math.max(longestStreak, currentStreak);
+            if (value > maxVal) {
+                maxVal = value;
             } else {
-                currentStreak = 0;
+                let drawdown = maxVal - value;
+                maxDrawdown = Math.max(maxDrawdown, drawdown);
             }
         });
 
-        return longestStreak;
+        return Math.floor(maxDrawdown);
+    }
+
+    function calculateAverageAnnualPerformance(data) {
+        let initialVal = data[0];
+        let finalVal = data[data.length - 1];
+
+        const launchDate = new Date('2019-11-13');
+        const currentDate = new Date();
+        const diffTime = Math.abs(currentDate - launchDate);
+        const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25); // Convert milliseconds to years
+
+        let performance = Math.pow(finalVal / initialVal, 1 / diffYears) - 1;
+
+        return performance;
     }
 
     // Fetch data on load
