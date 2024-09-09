@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${day}.${month}.${year}`;
     }
 
-    function fetchDataAndUpdateChart(period) {
+    function fetchDataAndUpdateAll(period) {
         const { dateFrom, dateTo } = getDateRangeForPeriod(period);
         let apiUrl = `https://api.extraetf.com/customer-api/ic/chart/?isin=AT0000A2B4T3&data_type=nav`;
         if (dateFrom && dateTo) {
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('alltime').addEventListener('click', () => handleButtonClick('alltime'));
 
     function handleButtonClick(period) {
-        fetchDataAndUpdateChart(period);
+        fetchDataAndUpdateAll(period);
         ['month', 'year', 'alltime'].forEach(id => {
             const element = document.getElementById(id);
             if (id === period) {
@@ -148,65 +148,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Initial data load for 'month'
-    handleButtonClick('alltime');
-});
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    function fetchData() {
-        const apiUrl = `https://api.extraetf.com/customer-api/ic/chart/?isin=AT0000A2B4T3&data_type=nav`;
-        fetch(apiUrl)
-            .then(response => response.json())
-            .then(apiData => {
-                const data = apiData.results.nav.map(entry => entry.value);
-                calculateAndDisplayMetrics(data);
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-            });
-    }
-
-    function calculateAndDisplayMetrics(data) {
-        const totalPerformance = calculateTotalPerformance(data);
-        const volatility = calculateVolatility(data);
-        const longestTimeUnderwater = calculateMaxDrawdown(data);
-        const average = calculateAverageAnnualPerformance(data);
-
-        document.getElementById('allperformance').textContent = `${totalPerformance.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
-        document.getElementById('vola').textContent = `${volatility.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
-        document.getElementById('average').textContent = `${(average * 100).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
-        document.getElementById('water').textContent = `${longestTimeUnderwater} Tage`;
-    }
-
     function calculateTotalPerformance(data) {
         const firstPrice = data[0];
         const lastPrice = data[data.length - 1];
         return ((lastPrice - firstPrice) / firstPrice) * 100;
-    }
-
-    function calculateVolatility(data) {
-        const minValue = Math.min(...data);
-        const maxValue = Math.max(...data);
-        const minDiff = Math.abs(100 - minValue);
-        const maxDiff = Math.abs(maxValue - 100);
-        return Math.max(minDiff, maxDiff);
-    }
-
-    function calculateMaxDrawdown(data) {
-        let maxVal = data[0];
-        let maxDrawdown = 0;
-
-        data.forEach(value => {
-            if (value > maxVal) {
-                maxVal = value;
-            } else {
-                let drawdown = maxVal - value;
-                maxDrawdown = Math.max(maxDrawdown, drawdown);
-            }
-        });
-
-        return Math.floor(maxDrawdown);
     }
 
     function calculateAverageAnnualPerformance(data) {
@@ -223,6 +168,93 @@ document.addEventListener('DOMContentLoaded', function() {
         return performance;
     }
 
-    // Fetch data on load
-    fetchData();
+    function fetchAndDisplayStaticMetrics() {
+        const apiUrl = `https://api.extraetf.com/customer-api/ic/detail/?isin=AT0000A2B4T3`;
+    
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Full API response:', data);
+                if (data.results && data.results.length > 0) {
+                    const fundData = data.results[0];
+                    console.log('Fund data:', fundData);
+    
+                    if (fundData.returns_nav) {
+                        console.log('Returns NAV:', fundData.returns_nav);
+                        // Get the first key in the returns_nav object
+                        const returnsNavKey = Object.keys(fundData.returns_nav)[0];
+                        const returnsNav = fundData.returns_nav[returnsNavKey];
+                        console.log(`Returns NAV for ${returnsNavKey}:`, returnsNav);
+    
+                        if (returnsNav && returnsNav.cumulative_total_return_since_inception !== null) {
+                            const totalReturn = returnsNav.cumulative_total_return_since_inception;
+                            console.log('Total return since inception:', totalReturn);
+                            document.getElementById('allperformance').textContent = 
+                                `${totalReturn.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
+                        } else {
+                            console.log('cumulative_total_return_since_inception is null or undefined');
+                            document.getElementById('allperformance').textContent = 'N/A';
+                        }
+                    } else {
+                        console.log('returns_nav is undefined');
+                        document.getElementById('allperformance').textContent = 'N/A';
+                    }
+    
+                    // Annualized performance since inception
+                    if (fundData.trailing_return_month_end && fundData.trailing_return_month_end.since_inception_pa !== null) {
+                        const annualizedReturn = fundData.trailing_return_month_end.since_inception_pa;
+                        console.log('Annualized return since inception:', annualizedReturn);
+                        document.getElementById('average').textContent = 
+                            `${annualizedReturn.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
+                    } else {
+                        console.log('since_inception_pa is null or undefined');
+                        document.getElementById('average').textContent = 'N/A';
+                    }
+    
+                    const riskAndRating = fundData.risk_and_rating && fundData.risk_and_rating['3']; // 3-year data
+    
+                    // 3-year volatility
+                    if (riskAndRating && riskAndRating.volatility !== null) {
+                        const volatility = riskAndRating.volatility;
+                        console.log('3-year volatility:', volatility);
+                        document.getElementById('vola').textContent = 
+                            `${volatility.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
+                    } else {
+                        console.log('volatility is null or undefined');
+                        document.getElementById('vola').textContent = 'N/A';
+                    }
+    
+                    // 3-year maximum drawdown
+                    if (riskAndRating && riskAndRating.max_drawdown !== null) {
+                        const maxDrawdown = Math.abs(riskAndRating.max_drawdown);
+                        console.log('3-year max drawdown:', maxDrawdown);
+                        document.getElementById('water').textContent = 
+                            `${maxDrawdown.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
+                    } else {
+                        console.log('max_drawdown is null or undefined');
+                        document.getElementById('water').textContent = 'N/A';
+                    }
+                } else {
+                    console.error('No fund data found in the API response');
+                    setAllMetricsToNA();
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching static metrics:', error);
+                setAllMetricsToNA();
+            });
+    }
+    
+    function setAllMetricsToNA() {
+        document.getElementById('allperformance').textContent = 'N/A';
+        document.getElementById('average').textContent = 'N/A';
+        document.getElementById('vola').textContent = 'N/A';
+        document.getElementById('water').textContent = 'N/A';
+    }
+
+    // Fetch static metrics once when the page loads
+    fetchAndDisplayStaticMetrics();
+
+    // Initial data load for 'alltime'
+    handleButtonClick('alltime');
 });
