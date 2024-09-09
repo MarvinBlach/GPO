@@ -173,10 +173,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const longestTimeUnderwater = calculateMaxDrawdown(data);
         const average = calculateAverageAnnualPerformance(data);
 
-        document.getElementById('allperformance').textContent = `${totalPerformance.toFixed(2).toLocaleString('de-DE')}%`;
-        document.getElementById('vola').textContent = `${volatility.toFixed(2).toLocaleString('de-DE')}%`;
-        document.getElementById('average').textContent = `${(average * 100).toFixed(2).toLocaleString('de-DE')}%`;
-        document.getElementById('water').textContent = `${longestTimeUnderwater} Tage`; 
+        document.getElementById('allperformance').textContent = `${totalPerformance.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
+        document.getElementById('vola').textContent = `${volatility.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
+        document.getElementById('average').textContent = `${(average * 100).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
+        document.getElementById('water').textContent = `${longestTimeUnderwater} Tage`;
     }
 
     function calculateTotalPerformance(data) {
