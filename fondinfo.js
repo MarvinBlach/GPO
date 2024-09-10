@@ -9,6 +9,28 @@ document.addEventListener('DOMContentLoaded', function () {
         return element;
     }
 
+    // Function to update stats elements
+    function updateStatsElements(data) {
+        const statsElements = document.querySelectorAll('[number_of_bond_holdings], [number_of_holdings], [number_of_stock_holdings], [kbv], [kgv]');
+        statsElements.forEach(element => {
+            const attribute = element.getAttribute('number_of_bond_holdings') !== null ? 'number_of_bond_holdings' :
+                              element.getAttribute('number_of_holdings') !== null ? 'number_of_holdings' :
+                              element.getAttribute('number_of_stock_holdings') !== null ? 'number_of_stock_holdings' :
+                              element.getAttribute('kbv') !== null ? 'kbv' :
+                              element.getAttribute('kgv') !== null ? 'kgv' : null;
+
+            if (attribute) {
+                let value;
+                if (attribute === 'kbv' || attribute === 'kgv') {
+                    value = data.fund_portfolio_prospective[attribute];
+                } else {
+                    value = data.fund_portfolio_n[attribute];
+                }
+                element.textContent = value !== null ? value.toFixed(2) : 'N/A';
+            }
+        });
+    }
+
     // Function to render fund holdings
     function renderFundHoldings(fundHoldings) {
         const container = document.querySelector('.positions_content-grid');
@@ -39,57 +61,57 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Function to render the main donut chart
-function renderDonutChart(allocation) {
-    const data = {
-        labels: ['Aktien', 'Anleihen', 'Cash', 'Sonstiges'],
-        datasets: [{
-            data: [allocation.stock, allocation.bond, allocation.cash, allocation.other],
-            backgroundColor: ['#182167', '#f7c2a5', '#36A2EB', '#FF6384'],
-        }]
-    };
+    function renderDonutChart(allocation) {
+        const data = {
+            labels: ['Aktien', 'Anleihen', 'Cash', 'Sonstiges'],
+            datasets: [{
+                data: [allocation.stock, allocation.bond, allocation.cash, allocation.other],
+                backgroundColor: ['#182167', '#f7c2a5', '#36A2EB', '#FF6384'],
+            }]
+        };
 
-    const ctx = document.getElementById('myDonutChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: data,
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
+        const ctx = document.getElementById('myDonutChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 }
             }
-        }
-    });
-}
+        });
+    }
 
-// Function to render the asset allocation breakdown
-function renderAssetAllocationBreakdown(allocation) {
-    const piechartHolder = document.querySelector('.piechart_holder');
-    piechartHolder.innerHTML = ''; // Clear existing content
+    // Function to render the asset allocation breakdown
+    function renderAssetAllocationBreakdown(allocation) {
+        const piechartHolder = document.querySelector('.piechart_holder');
+        piechartHolder.innerHTML = ''; // Clear existing content
 
-    const totalAllocation = allocation.bond + allocation.stock + allocation.cash + allocation.other;
+        const totalAllocation = allocation.bond + allocation.stock + allocation.cash + allocation.other;
 
-    const assetTypes = [
-        { name: 'Aktien', value: allocation.stock, color: '#182167' },
-        { name: 'Anleihen', value: allocation.bond, color: '#f7c2a5' },
-        { name: 'Cash', value: allocation.cash, color: '#36A2EB' },
-        { name: 'Sonstiges', value: allocation.other, color: '#FF6384' }
-    ];
+        const assetTypes = [
+            { name: 'Aktien', value: allocation.stock, color: '#182167' },
+            { name: 'Anleihen', value: allocation.bond, color: '#f7c2a5' },
+            { name: 'Cash', value: allocation.cash, color: '#36A2EB' },
+            { name: 'Sonstiges', value: allocation.other, color: '#FF6384' }
+        ];
 
-    assetTypes.forEach(asset => {
-        const percentage = ((asset.value / totalAllocation) * 100).toFixed(2);
+        assetTypes.forEach(asset => {
+            const percentage = ((asset.value / totalAllocation) * 100).toFixed(2);
 
-        const percentageHolder = createElement('div', 'piechart_percentage-holder');
-        const percentageText = createElement('div', 'text-size-medium pie_percentage', `${percentage}%`);
-        const nameText = createElement('div', 'text-size-medium op_50 pie_name', asset.name);
+            const percentageHolder = createElement('div', 'piechart_percentage-holder');
+            const percentageText = createElement('div', 'text-size-medium pie_percentage', `${percentage}%`);
+            const nameText = createElement('div', 'text-size-medium op_50 pie_name', asset.name);
 
-        percentageHolder.appendChild(percentageText);
-        percentageHolder.appendChild(nameText);
+            percentageHolder.appendChild(percentageText);
+            percentageHolder.appendChild(nameText);
 
-        piechartHolder.appendChild(percentageHolder);
-    });
-}
+            piechartHolder.appendChild(percentageHolder);
+        });
+    }
 
     // Function to render annualized returns inside .renditen_annual
     function renderAnnualizedReturns(trailingReturns) {
@@ -235,26 +257,52 @@ function renderAssetAllocationBreakdown(allocation) {
         });
     }
 
-      // Function to update all elements with the attribute 'hs-total-return' with the cumulative total return
-      
+    function updateRiskRatingElements(riskAndRating) {
+        const formatValue = (value) => value !== null ? value.toFixed(2) : 'N/A';
+    
+        const updateElement = (attribute, getKey) => {
+            const element = document.querySelector(`[${attribute}]`);
+            if (element) {
+                const values = [1, 3, 5].map(year => {
+                    const yearData = riskAndRating[year.toString()];
+                    return yearData ? formatValue(yearData[getKey]) : 'N/A';
+                });
+                element.textContent = values.join(' / ');
+            }
+        };
+    
+        updateElement('vola', 'volatility');
+        updateElement('drawdown', 'max_drawdown');
+        updateElement('sharpe', 'sharpe_ratio');
+        updateElement('alpha', 'alpha');
+    }
 
     // Function to handle API response and dispatch to rendering functions
     function handleApiResponse(apiData) {
         const results = apiData.results && apiData.results[0];
 
         if (results) {
-            // Update the cumulative total return
-            if (results.cumulative_total_return_since_inception) {
-                console.log('Updating total return with:', results.cumulative_total_return_since_inception);
+            // Update stats elements
+            updateStatsElements(results);
 
-                updateTotalReturn(results.cumulative_total_return_since_inception);
+            // Update risk and rating elements
+            if (results.risk_and_rating) {
+                updateRiskRatingElements(results.risk_and_rating);
+            }
+
+            // Update the cumulative total return
+            if (results.returns_nav && results.returns_nav['0P0001K82W'] && results.returns_nav['0P0001K82W'].cumulative_total_return_since_inception) {
+                const totalReturn = results.returns_nav['0P0001K82W'].cumulative_total_return_since_inception;
+                const formattedReturn = totalReturn.toFixed(2) + '%';
+                document.querySelectorAll('[hs-total-return]').forEach(el => {
+                    el.textContent = formattedReturn;
+                });
             }
 
             // Render fund holdings
             if (results.fund_portfolio_holdings) {
                 renderFundHoldings(results.fund_portfolio_holdings);
             }
-
 
             // Render asset allocation and breakdown
             if (results.fund_portfolio_asset_allocation) {
