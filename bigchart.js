@@ -33,7 +33,8 @@ const myChart = new Chart(ctx, {
                         return tooltipItems[0].label;
                     },
                     label: function(tooltipItem, data) {
-                        document.getElementById('today-price').textContent = `${tooltipItem.formattedValue}€`;
+                        const formattedValue = tooltipItem.formattedValue.replace('.', ',');
+                        document.getElementById('today-price').textContent = `${formattedValue}€`;
                         return null;
                     }
                 }
@@ -164,7 +165,7 @@ function updateIndicatorClass(performance) {
 
 // On window load
 window.onload = function() {
-    handleButtonClick('month');
+    handleButtonClick('alltime');
 };
 
 function calculateAndDisplayMinMaxValues(data) {
