@@ -61,35 +61,36 @@ function updateChart(chart, labels, data) {
     chart.data.datasets[0].data = data;
     chart.update();
     updateIndicatorAndPerformance(data);
+    calculateAndDisplayMinMaxValues(data);
 }
 
-    function getDateRangeForPeriod(period) {
-        const today = new Date();
-        const launchDate = '2019-11-13';
-        let dateFrom, dateTo;
+function getDateRangeForPeriod(period) {
+    const today = new Date();
+    const launchDate = '2019-11-13';
+    let dateFrom, dateTo;
 
-        switch (period) {
-            case 'month':
-                dateFrom = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate()).toISOString().split('T')[0];
-                dateTo = today.toISOString().split('T')[0];
-                break;
-            case 'year':
-                dateFrom = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 365).toISOString().split('T')[0];
-                dateTo = today.toISOString().split('T')[0];
-                break;
-            case 'alltime':
-                dateFrom = launchDate;
-                dateTo = today.toISOString().split('T')[0];
-                break;
-        }
-
-        // Update date1, date2, and datum elements
-        document.getElementById('date1').textContent = formatDate(dateFrom);
-        document.getElementById('date2').textContent = formatDate(dateTo);
-        document.getElementById('datum').textContent = `Zeitraum: ${formatDate(dateFrom)} bis ${formatDate(dateTo)}`;
-
-        return { dateFrom, dateTo };
+    switch (period) {
+        case 'month':
+            dateFrom = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate()).toISOString().split('T')[0];
+            dateTo = today.toISOString().split('T')[0];
+            break;
+        case 'year':
+            dateFrom = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 365).toISOString().split('T')[0];
+            dateTo = today.toISOString().split('T')[0];
+            break;
+        case 'alltime':
+            dateFrom = launchDate;
+            dateTo = today.toISOString().split('T')[0];
+            break;
     }
+
+    // Update date1, date2, and datum elements
+    document.getElementById('date1').textContent = formatDate(dateFrom);
+    document.getElementById('date2').textContent = formatDate(dateTo);
+    document.getElementById('datum').textContent = `Zeitraum: ${formatDate(dateFrom)} bis ${formatDate(dateTo)}`;
+
+    return { dateFrom, dateTo };
+}
 
 function formatDate(dateStr) {
     if (!dateStr) return 'Anfang';
@@ -147,8 +148,9 @@ function updateIndicatorAndPerformance(data) {
     const firstPrice = data[0];
     const performance = ((todayPrice - firstPrice) / firstPrice) * 100;
 
-    todayPriceElement.textContent = `${todayPrice.toFixed(2)}€`;
-    performanceElement.textContent = `${performance.toFixed(2)}%`;
+    // Format price and performance with comma instead of dot
+    todayPriceElement.textContent = `${todayPrice.toFixed(2).replace('.', ',')}€`;
+    performanceElement.textContent = `${performance.toFixed(2).replace('.', ',')}%`;
 
     updateIndicatorClass(performance);
 }
@@ -175,19 +177,7 @@ function calculateAndDisplayMinMaxValues(data) {
     const maxPercentage = ((maxValue - baseValue) / baseValue) * 100;
     const minPercentage = ((minValue - baseValue) / baseValue) * 100;
 
-    document.getElementById('max').textContent = `${maxPercentage.toFixed(2)}%`;
-    document.getElementById('min').textContent = `${minPercentage.toFixed(2)}%`;
+    // Format percentages with comma instead of dot
+    document.getElementById('max').textContent = `${maxPercentage.toFixed(2).replace('.', ',')}%`;
+    document.getElementById('min').textContent = `${minPercentage.toFixed(2).replace('.', ',')}%`;
 }
-
-function updateChart(chart, labels, data) {
-    chart.data.labels = labels;
-    chart.data.datasets[0].data = data;
-    chart.update();
-
-    updateIndicatorAndPerformance(data);
-    calculateAndDisplayMinMaxValues(data);
-}
-
-document.getElementById('month').addEventListener('click', () => handleButtonClick('month'));
-document.getElementById('year').addEventListener('click', () => handleButtonClick('year'));
-document.getElementById('alltime').addEventListener('click', () => handleButtonClick('alltime'));
