@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('average').textContent = 'N/A';
                     }
     
-                    const riskAndRating = fundData.risk_and_rating && fundData.risk_and_rating['3']; // 3-year data
+                    const riskAndRating = fundData.risk_and_rating && fundData.risk_and_rating['5']; // 3-year data
     
                     // 3-year volatility
                     if (riskAndRating && riskAndRating.volatility !== null) {
