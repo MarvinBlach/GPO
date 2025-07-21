@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const maxDrawdown = Math.abs(riskAndRating.max_drawdown);
                         console.log('3-year max drawdown:', maxDrawdown);
                         document.getElementById('water').textContent = 
-                            `${maxDrawdown.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
+                           `-${Math.abs(maxDrawdown).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
                     } else {
                         console.log('max_drawdown is null or undefined');
                         document.getElementById('water').textContent = 'N/A';
