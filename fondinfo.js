@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const API_URL = 'https://api.extraetf.com/customer-api/ic/detail/?isin=AT0000A2B4U1';
+    const API_URL = 'https://api.extraetf.com/customer-api/ic/detail/?isin=AT0000A2B4T3';
 
     // Utility function to create and append a new element
     function createElement(type, className, textContent) {
