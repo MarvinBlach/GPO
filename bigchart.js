@@ -100,7 +100,7 @@ function formatDate(dateStr) {
 
 function fetchDataAndUpdateChart(period) {
     const { dateFrom, dateTo } = getDateRangeForPeriod(period);
-    let apiUrl = `https://api.extraetf.com/customer-api/ic/chart/?isin=AT0000A2B4T3&data_type=nav`;
+    let apiUrl = `https://api.extraetf.com/customer-api/ic/chart/?isin=AT0000A2B4T3&data_type=aum`;
     if (dateFrom && dateTo) {
         apiUrl += `&date_from=${dateFrom}&date_to=${dateTo}`;
     }
@@ -108,9 +108,9 @@ function fetchDataAndUpdateChart(period) {
     fetch(apiUrl)
         .then(response => response.json())
         .then(apiData => {
-            // Changed from apiData.results.nav to apiData.results.trinav
-            const labels = apiData.results.trinav.map(entry => formatDate(entry.date));
-            const data = apiData.results.trinav.map(entry => entry.value);
+            // Changed from apiData.results.trinav to apiData.results.aum
+            const labels = apiData.results.aum.map(entry => formatDate(entry.date));
+            const data = apiData.results.aum.map(entry => entry.value);
 
             const minValue = Math.min(...data);
             const maxValue = Math.max(...data);
