@@ -108,8 +108,9 @@ function fetchDataAndUpdateChart(period) {
     fetch(apiUrl)
         .then(response => response.json())
         .then(apiData => {
-            const labels = apiData.results.nav.map(entry => formatDate(entry.date));
-            const data = apiData.results.nav.map(entry => entry.value);
+            // Changed from apiData.results.nav to apiData.results.trinav
+            const labels = apiData.results.trinav.map(entry => formatDate(entry.date));
+            const data = apiData.results.trinav.map(entry => entry.value);
 
             const minValue = Math.min(...data);
             const maxValue = Math.max(...data);
